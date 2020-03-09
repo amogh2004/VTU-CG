@@ -22,20 +22,20 @@
 void polygon(int a, int b, int c , int d)
 {
 	glBegin(GL_POLYGON);
-		glColor3fv(colors[a]);
-		glNormal3fv(normals[a]);
-		glVertex3fv(vertices[a]);
+			glColor3fv(colors[a]);
+			glNormal3fv(normals[a]);
+			glVertex3fv(vertices[a]);
 		glColor3fv(colors[b]);
 		glNormal3fv(normals[b]);
 		glVertex3fv(vertices[b]);
-		glColor3fv(colors[c]);
-		glNormal3fv(normals[c]);
-		glVertex3fv(vertices[c]);
+			glColor3fv(colors[c]);
+			glNormal3fv(normals[c]);
+			glVertex3fv(vertices[c]);
 		glColor3fv(colors[d]);
 		glNormal3fv(normals[d]);
 		glVertex3fv(vertices[d]);
 	glEnd();
-																									}
+}
 
 void colorcube(void)
 {
@@ -81,13 +81,15 @@ void mouse(int btn, int state, int x, int y)
 	
 	theta[axis] += 2.0;
 	
-	if( theta[axis] > 360.0 ) theta[axis] -= 360.0;
-		display();
+	if( theta[axis] > 360.0 ) 
+		theta[axis] -= 360.0;
+		
+	display();
 }
 
 void keys(unsigned char key, int x, int y)
 {
-	/* Use x, X, y, Y, z, and Z keys to move viewer */
+	/* Use x, X, y, Y, z, Z keys to move viewer */
 	if(key == 'x') viewer[0]-= 1.0;
    if(key == 'X') viewer[0]+= 1.0;
    if(key == 'y') viewer[1]-= 1.0;
