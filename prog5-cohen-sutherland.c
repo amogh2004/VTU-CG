@@ -1,0 +1,175 @@
+//5. Clip a lines using Cohen-Sutherland algorithm
+
+/*
+1. Given a line segment with endpoint and
+2. Compute the 4-bit codes for each endpoint.
+      If both codes are 0000,(bitwise OR of the codes yields 0000 ) line lies completely inside
+      the window: pass the endpoints to the draw routine.
+      If both codes have a 1 in the same bit position (bitwise AND of the codes is not 0000), the line lies
+      outside the window. It can be trivially rejected.
+3. If a line cannot be trivially accepted or rejected, at least one of the two endpoints must lie
+    outside the window and the line segment crosses a window edge.
+    This line must be clipped at the window edge before being passed to the drawing routine.
+4. Examine one of the endpoints, say . Read 's 4-bit code in order: Left-to-Right, Bottom-to-Top.
+5. When a set bit (1) is found, compute the intersection I of the corresponding window edge with the line.
+    Replace with I and repeat the algorithm.
+*/
+
+#include<stdio.h>
+#include<GL/glut.h>
+#define outcode int
+
+double xmin=50,ymin=50,xmax=100,ymax=100;
+double xvmin=200,yvmin=200,xvmax=300,yvmax=300;
+//double X0=80,Y0=40,X1=10,Y1=120;
+//double X0,Y0,X1,Y1;
+
+float X0,Y0,X1,Y1;
+const int RIGHT=2;
+const int LEFT=1;
+const int TOP=8;
+const int BOTTOM=4;
+
+outcode ComputeOutCode(double x,double y);
+
+void CohenSutherlandLineClipAndDraw(double x0,double y0,double x1,double y1)
+{
+    outcode outcode0,outcode1,outcodeOut;
+   	int accept=0,done=0;
+    outcode0=ComputeOutCode(x0,y0);
+    outcode1=ComputeOutCode(x1,y1);
+
+   	do
+   	{
+      		  if(!(outcode0 | outcode1))
+        		{
+           			accept=1;
+            		done=1;
+        		}
+        		else if(outcode0 & outcode1)
+            	done=1;
+        		else
+        		{
+            		double x,y,m;
+            		m=(y1-y0)/(x1-x0);
+            		outcodeOut=outcode0?outcode0:outcode1;
+            		if(outcodeOut & TOP)
+            		{
+              			  x=x0+(ymax-y0)/m;
+                			y=ymax;
+           			 }
+           			 else if(outcodeOut & BOTTOM)
+           			 {
+               			 x=x0+(ymin-y0)/m;
+               			 y=ymin;
+            		}
+            		else if(outcodeOut & RIGHT)
+            		{
+              			  y=y0+(xmax-x0)*m;
+              			  x=xmax;
+            		}
+           			 else
+            		{
+               			 y=y0+(xmin-x0)*m;
+               			 x=xmin;
+            		}
+            		if(outcodeOut == outcode0)
+            		{
+              			  x0=x;
+                			y0=y;
+                			outcode0=ComputeOutCode(x0,y0);
+            		}
+            		else
+           			 {
+                			x1=x;
+                			y1=y;
+               			 outcode1=ComputeOutCode(x1,y1);
+            		}
+        		}
+  	  }
+while(!done);
+    	glColor3f(1.0,0.0,0.0);
+        	glBegin(GL_LINE_LOOP);
+       	 glVertex2f(xvmin,yvmin);
+        	glVertex2f(xvmax,yvmin);
+        	glVertex2f(xvmax,yvmax);
+        	glVertex2f(xvmin,yvmax);
+        	glEnd();
+        	//printf("\n%f   %f :  %f   %f",x0,y0,x1,y1);
+    	if(accept)
+   	 {
+        		double sx=(xvmax-xvmin)/(xmax-xmin);
+        		double sy=(yvmax-yvmin)/(ymax-ymin);
+        		double vx0=xvmin+(x0-xmin)*sx;
+double vy0=yvmin+(y0-ymin)*sy;
+        		double vx1=xvmin+(x1-xmin)*sx;
+        		double vy1=yvmin+(y1-ymin)*sy;
+
+        		glColor3f(0.0,0.0,1.0);
+       		 glBegin(GL_LINES);
+       		 glVertex2d(vx0,vy0);
+      		  glVertex2d(vx1,vy1);
+        		glEnd();
+   	 }
+}
+
+outcode ComputeOutCode(double x,double y)
+{
+    	outcode code=0;
+    	if(y>ymax)
+        		code|=TOP;
+    	else if(y<ymin)
+        		code|=BOTTOM;
+    	if(x>xmax)
+        		code|=RIGHT;
+   	 else if(x<xmin)
+        		code|=LEFT;
+    	return code;
+}
+ void display()
+{
+    //double X0=80,Y0=40,X1=10,Y1=120;//double X0,Y0,X1,Y1;
+    	glClear(GL_COLOR_BUFFER_BIT);
+    	glColor3f(1.0,0.0,0.0);
+    	glBegin(GL_LINES);
+   	 glVertex2d(X0,Y0);
+   	 glVertex2d(X1,Y1);
+    	glEnd();
+  	  glColor3f(0.0,0.0,1.0);
+    	glBegin(GL_LINE_LOOP);
+    	glVertex2f(xmin,ymin);
+   	 glVertex2f(xmax,ymin);
+    	glVertex2f(xmax,ymax);
+    	glVertex2f(xmin,ymax);
+    	glEnd();
+   	 CohenSutherlandLineClipAndDraw(X0,Y0,X1,Y1);
+    	glFlush();
+}
+
+void myinit()
+{
+    	glClearColor(1.0,1.0,1.0,1.0);
+    	glColor3f(1.0,0.0,0.0);
+    	glPointSize(1.0);
+    	glMatrixMode(GL_PROJECTION);
+    	glLoadIdentity();
+    	gluOrtho2D(0.0,499.0,0.0,499.0);
+}
+
+int main(int argc,char** argv)
+{
+     //float x0,y0,x1,y1;
+   	 printf("Enter end points : ");
+     scanf("%f%f%f%f",&X0,&Y0,&X1,&Y1);
+     //printf("\nx0 : %f , y0 : %f , x1 : %f , y1 :
+                // %f\n",X0,Y0,X1,Y1);
+    	glutInit(&argc,argv);
+    	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    	glutInitWindowSize(500,500);
+    	glutInitWindowPosition(0,0);
+    	glutCreateWindow("Algorithm");
+   	    glutDisplayFunc(display);
+   	    myinit();
+    	glutMainLoop();
+    	return 0;
+}
